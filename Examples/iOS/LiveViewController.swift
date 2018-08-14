@@ -44,6 +44,8 @@ final class LiveViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        rtmpConnection.flashVer = "Argon"
+
         rtmpStream = RTMPStream(connection: rtmpConnection)
         rtmpStream.syncOrientation = true
         rtmpStream.captureSettings = [
@@ -52,10 +54,16 @@ final class LiveViewController: UIViewController {
             "continuousExposure": true
         ]
         rtmpStream.videoSettings = [
-            "width": 720,
-            "height": 1280
+            "width": 1280,
+            "height": 720,
+            "profileLevel": kVTProfileLevel_H264_Baseline_3_1,
+            "maxKeyFrameIntervalDuration": 3,
+            //
+            "bitrate": 300 * 1024
         ]
         rtmpStream.audioSettings = [
+            "muted": true,
+            //
             "sampleRate": sampleRate
         ]
         rtmpStream.mixer.recorder.delegate = ExampleRecorderDelegate()

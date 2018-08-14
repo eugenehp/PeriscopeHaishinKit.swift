@@ -37,4 +37,14 @@ extension CMSampleBuffer {
     var presentationTimeStamp: CMTime {
         return CMSampleBufferGetPresentationTimeStamp(self)
     }
+    var sampleTimingInfo: [CMSampleTimingInfo] {
+        var count: CMItemCount = 0
+        CMSampleBufferGetSampleTimingInfoArray(self, 0, nil, &count)
+        var result = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(duration: kCMTimeZero,
+                                                                      presentationTimeStamp: kCMTimeZero,
+                                                                      decodeTimeStamp: kCMTimeZero),
+                                          count: count)
+        CMSampleBufferGetSampleTimingInfoArray(self, count, &result, &count)
+        return result
+    }
 }

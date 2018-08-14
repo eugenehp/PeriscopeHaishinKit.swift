@@ -11,14 +11,18 @@ final class RTMPMuxer {
     static let aac: UInt8 = FLVAudioCodec.aac.rawValue << 4 | FLVSoundRate.kHz44.rawValue << 2 | FLVSoundSize.snd16bit.rawValue << 1 | FLVSoundType.stereo.rawValue
 
     weak var delegate: RTMPMuxerDelegate?
+    private var frameCount: Int = 0
+//    private var compositionTime: Int32 = 0
     private var configs: [Int: Data] = [:]
     private var audioTimestamp: CMTime = kCMTimeZero
     private var videoTimestamp: CMTime = kCMTimeZero
+    private var initalVideoTimestamp: CMTime = kCMTimeZero
 
     func dispose() {
         configs.removeAll()
         audioTimestamp = kCMTimeZero
         videoTimestamp = kCMTimeZero
+        initalVideoTimestamp = kCMTimeZero
     }
 }
 
@@ -61,23 +65,49 @@ extension RTMPMuxer: VideoEncoderDelegate {
 
     func sampleOutput(video sampleBuffer: CMSampleBuffer) {
         let keyframe: Bool = !sampleBuffer.dependsOnOthers
-        var compositionTime: Int32 = 0
         let presentationTimeStamp: CMTime = sampleBuffer.presentationTimeStamp
+        if self.initalVideoTimestamp == kCMTimeZero {
+            self.initalVideoTimestamp = presentationTimeStamp
+        }
+//        let newTime = CMTime(seconds: Double(self.frameCount) * 0.34, preferredTimescale: presentationTimeStamp.timescale)
+//        let res = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, newTime)
+//        if res != 0 {
+//            fatalError("could not convert presentation timestamp")
+//        }
+
         var decodeTimeStamp: CMTime = sampleBuffer.decodeTimeStamp
         if decodeTimeStamp == kCMTimeInvalid {
             decodeTimeStamp = presentationTimeStamp
-        } else {
-            compositionTime = Int32((decodeTimeStamp.seconds - decodeTimeStamp.seconds) * 1000)
         }
         let delta: Double = (videoTimestamp == kCMTimeZero ? 0 : decodeTimeStamp.seconds - videoTimestamp.seconds) * 1000
+        // E.4.1.3
+//        compositionTime += Int32(delta) // Int32(delta)
+        let compositionTime = Int32(delta)
+
+        var newTiming = [CMSampleTimingInfo](repeating: CMSampleTimingInfo(duration: kCMTimeZero,
+                                                                           presentationTimeStamp: kCMTimeZero,
+                                                                           decodeTimeStamp: kCMTimeZero),
+                                             count: sampleBuffer.sampleTimingInfo.count)
+
+        for i in 0..<sampleBuffer.sampleTimingInfo.count {
+            newTiming[i].decodeTimeStamp = decodeTimeStamp
+            newTiming[i].presentationTimeStamp = presentationTimeStamp
+            newTiming[i].duration = CMTime(seconds: delta / 1000, preferredTimescale: 1000000)
+        }
+
+        var out: CMSampleBuffer?
+        CMSampleBufferCreateCopyWithNewTiming(nil, sampleBuffer, newTiming.count, &newTiming, &out)
+
         guard let data = sampleBuffer.dataBuffer?.data, 0 <= delta else {
             return
         }
+        
         var buffer = Data([((keyframe ? FLVFrameType.key.rawValue : FLVFrameType.inter.rawValue) << 4) | FLVVideoCodec.avc.rawValue, FLVAVCPacketType.nal.rawValue])
         buffer.append(contentsOf: compositionTime.bigEndian.data[1..<4])
         buffer.append(data)
         delegate?.sampleOutput(video: buffer, withTimestamp: delta, muxer: self)
         videoTimestamp = decodeTimeStamp
+        self.frameCount += 1
     }
 }
 

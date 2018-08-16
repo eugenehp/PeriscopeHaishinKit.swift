@@ -42,6 +42,7 @@ final class RTMPChunk {
         case video   = 0x05
     }
 
+//    https://github.com/arut/nginx-rtmp-module/wiki/Directives#chunk_size
     static let defaultSize: Int = 128
     static let maxTimestamp: UInt32 = 0xFFFFFF
 

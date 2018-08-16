@@ -44,22 +44,26 @@ final class LiveViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        rtmpConnection.flashVer = "Argon"
+        rtmpConnection.flashVer = "Wirecast"
 
         rtmpStream = RTMPStream(connection: rtmpConnection)
         rtmpStream.syncOrientation = true
         rtmpStream.captureSettings = [
-            "sessionPreset": AVCaptureSession.Preset.hd1280x720.rawValue,
-            "continuousAutofocus": true,
-            "continuousExposure": true
+//            "sessionPreset": AVCaptureSession.Preset.hd1280x720.rawValue,
+            "sessionPreset": AVCaptureSession.Preset.iFrame960x540.rawValue,
+            "continuousAutofocus": false, //true,
+            "continuousExposure": false, //true,
+            //
+            "fps": 30,
         ]
         rtmpStream.videoSettings = [
-            "width": 1280,
-            "height": 720,
-            "profileLevel": kVTProfileLevel_H264_Baseline_3_1,
+            "width": 960, //1280,
+            "height": 540, //720,
+            "profileLevel": kVTProfileLevel_H264_High_5_0,
             "maxKeyFrameIntervalDuration": 3,
             //
-            "bitrate": 300 * 1024
+            "bitrate": 300 * 1024,
+            "dataRateLimits": [160 * 1024 / 8, 1],
         ]
         rtmpStream.audioSettings = [
             "muted": true,

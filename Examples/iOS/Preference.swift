@@ -10,5 +10,5 @@ struct Preference {
 //    var streamName: String? = "wowza"
     
     var uri: String? = "rtmp://ca.pscp.tv:80/x"
-    var streamName: String? = "uhnynx8wztar"
+    var streamName: String? = "ek8s3jyqnwsi"
 }

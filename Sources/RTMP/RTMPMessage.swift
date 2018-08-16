@@ -529,6 +529,12 @@ final class RTMPSharedObjectMessage: RTMPMessage {
     }
 }
 
+extension Data {
+    var hexDescription: String {
+        return reduce("") {$0 + String(format: "%02x", $1)}
+    }
+}
+
 // MARK: -
 /**
  7.1.5. Audio Message (9)
@@ -561,6 +567,10 @@ final class RTMPAudioMessage: RTMPMessage {
             }
 
             super.payload = newValue
+            
+            print("RTMPAudioMessage==========================1")
+            print(newValue.hexDescription)
+            print("RTMPAudioMessage==========================2")
 
             if length == newValue.count && !newValue.isEmpty {
                 guard let codec: FLVAudioCodec = FLVAudioCodec(rawValue: newValue[0] >> 4),
@@ -627,6 +637,25 @@ final class RTMPAudioMessage: RTMPMessage {
 final class RTMPVideoMessage: RTMPMessage {
     private(set) var codec: FLVVideoCodec = .unknown
     private(set) var status: OSStatus = noErr
+    
+    override var payload: Data {
+        get {
+            return super.payload
+        }
+        set {
+            if super.payload == newValue {
+                return
+            }
+            
+            super.payload = newValue
+            
+            print("RTMPVideoMessage==========================1")
+            print(newValue.hexDescription)
+            print("RTMPVideoMessage==========================2")
+            
+            //TODO: parse video codec here properly
+        }
+    }
 
     init() {
         super.init(type: .video)

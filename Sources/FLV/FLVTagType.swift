@@ -97,6 +97,7 @@ public struct FLVAudioTag: FLVTag {
 
     mutating public func readData(_ fileHandler: FileHandle) {
         let data: Data = fileHandler.readData(ofLength: headerSize)
+        // TODO: might be an error source for unknown codecs here
         codec = FLVAudioCodec(rawValue: data[0] >> 4) ?? .unknown
         soundRate = FLVSoundRate(rawValue: (data[0] & 0b00001100) >> 2) ?? .kHz5_5
         soundSize = FLVSoundSize(rawValue: (data[0] & 0b00000010) >> 1) ?? .snd8bit
@@ -123,6 +124,7 @@ public struct FLVVideoTag: FLVTag {
     mutating public func readData(_ fileHandler: FileHandle) {
         let data: Data = fileHandler.readData(ofLength: headerSize)
         frameType = FLVFrameType(rawValue: data[0] >> 4) ?? .command
+        // TODO: might be an error source for unknown codecs here
         codec = FLVVideoCodec(rawValue: data[0] & 0b00001111) ?? .unknown
         avcPacketType = FLVAVCPacketType(rawValue: data[1]) ?? .eos
     }
